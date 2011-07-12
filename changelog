@@ -1,0 +1,397 @@
+COMMIE Changelog (add new on top)
+--------------------------------------------------------------------------------
+Jul 6th, 2010 (JFS)
+	- commie_compute_normalizaton will now  handle a complete lack of 
+	common pixels gracefully.
+
+Jun 9th, 2010 (JFS)
+	- ccd_classify now will not assume that average dark current level is 
+	below 300 counts.
+
+Feb 23rd, 2010 (JFS)
+	- added second mode of flux normalization. If there is not enough 
+	common pixels to normalize all arrays to, then each array will be 
+	normalized in pairs.
+
+Feb 21st, 2010 (JFS)
+	- added possibility to define a subset in the scriptfile using 
+	subset_indices
+	
+Dec 9th, 2009 (JFS)
+	- added possibility to not have beamstop subtracted from one or
+	more positions.
+
+Feb 22nd (JFS)
+	- new script file tag ring_amps. This can be used for top-off mode when 
+	ring current should stay the same always. 
+	
+Feb 20th (JFS)
+	- COMMIE can now read files written with the new version 6 of dt_par.
+	It will check the version before to decide whether to read up2xstg_m 
+	or dnxstg_m.
+
+Nov 23rd (JFS)
+	- COMMIE now saves the theta_x angle in the adi struct. For 2D images
+	this should be the same for all raw datafiles. For 3D we will use the 
+	array structure theta_x_radians in ainfo_struct.
+
+Jun 24th (JFS)
+	- added new routine commie_get_motor_positions that will go through the
+	sample files and try to determine the motor positions and values
+	if nothing has been specified in the scriptfile. It will then call 
+	_scriptfile_io with the new keyword /add_motor_positions which will
+	write the motor positions to the scriptfile
+	
+Jun 23rd (JFS)
+	- added smoothing to commie_compute_shifts, as this will remove the 
+	speckles and yields better results for the alignment
+	- added keyword no_smooth_ref to commie_compute_shifts. This will not
+	smooth the reference array which is used when aligning to a fake 
+	noise and speckle free square.
+	- added new routine commie_find_shifts, which is now called by 
+	commie_find_pos_shifts in order to minimize code repetition.
+	- commie should now prompt when you are about to overwrite an already
+	existing assembled file.
+	
+May 29th (JFS)
+	- user now prompted for reference array in commie_find_pos_shifts.
+	At some point this should be automated.
+	
+May 28th (JFS)
+	- greater edgegauss sigma seems to be working well.
+	- reversed some changes. In particular went back to bs_xs and bs_ys,
+	since we need the center position as starting index for growing the 
+	beamstop with interactive region grow.
+	- absolute beamstop position is determined by looking at 
+	cross-correlation with centered square. User is prompted for consent on
+	the determined position
+	
+May 27th (JFS)
+	- added automatic alignment of beamstop positions in new routine
+	commie_find_pos_shifts.
+	- new function commie_compute_shifts that does the math
+	- changed tags bs_xs and bs_ys in scriptfile_io to pos_x_shifts and
+	pos_y_shifts respectively. 
+	- Other changes necessary because of tagname change:
+		- _verbose_output
+		- _manual_align: no need to determine bs position, removed
+		that button, returns relative shifts instead
+		- remove_bs
+	- there are two independent functions now commie_find_pos_shifts and 
+	commie_find_bs_arr.
+	
+May 16th (JFS)
+	- included possibility to patch beamstop mask together in Interactive
+	region_grow.
+	- updated status-strings in commie_manual_align
+	
+May 14th (JFS)
+	- added new function commie_manual_align which facilitates the 
+	alignment of the different positions before finding the beamstop. 
+	It will replace display_zoom_click and be optional once the automatic
+	alignment works.
+	
+Apr 25th (JFS)
+	- all tags in adi_struct not carried over from dt_par into one of 
+	the commie_structs are set to zero.
+	
+Apr 17th (JFS)
+	- added possibility to only look at region of interest to 
+	commie_find_bs_widget,pro 
+	
+Apr 16th (JFS)
+	- renamed commie_find_bs to commie_find_bs_pos and commie_find_bs_arr
+	- bs position still determined before merge_by_pos but the interactive
+	region grow is now loaded after merge_by_pos which has the advantage 
+	that we know how the signal is scaling 1/r^3
+
+Apr 7th (JFS)
+	- changed dk_saveread_dir to dk_saveread_file to make it more 
+	obvious
+	- changed save_bs to bs_saveread_file
+	- added tagname energy_ev
+	
+Mar 28th (JFS)
+	- fixed bug in _scriptfile_io.
+	- it is now possible to not indicate any dark current files in the 
+	scriptfile if the info can be loaded from disk
+	- accounted for possibility of user handing over only one array to 
+	_compute_normalization.
+	- removed corner scatter removal code leftovers in _assemble_merged_pos
+	- fixed bug in _init_relerrs that required certain dk exposure times
+	to initialize relerror arrays for all positions.
+	- fixed bug in _saveread_merged_pos related to the filenames with 
+	control number
+	- _compute_normalization now chooses reference array by looking for 
+	the maximum amount of overlapping pixel per given reference array.
+	If the number of common pixels is less then 100 then it prints a 
+	warning and will not perform flux normalization.
+	- changed nomenclature of saved merged pos.
+	
+Mar 26th (JFS)
+	- added default dk_saveread_dir in _get_filenames 
+	- deprecated masks-keyword in _get_filenames since it is no longer
+	needed
+	- added new keyword /no_background that will leave the no_sample un
+	subtracted. It required adjustments in the following files: 
+	commie.pro, _script_struct__define,_get_filenames, _saveread_merged_pos,
+	and _merge_by_pos
+	- modifed meaning of keyword /dk_by_pix. If it is not set, both average 
+	and rms error are taken from the fitted data. This required changes 
+	in the following files: commie.pro, _saveread_dk, ccd_classify,
+	and _init_relerrs
+	- tested and seems to work
+	- _write_adi now also stores no_background, dk_by_pix and merge_first
+	- added test for what keywords have been set in earlier merge if user 
+	is using previously merged positions with _saveread_merged_pos
+	
+Mar 24th (JFS)
+	- now provided for possibility that the relative errors can be zero in
+	input arrays. If that is the case then do not use these pixels in
+	_compute_normalization and _weighted_averages
+	- fixed bug in _merged_dummy_arrays so that relerror arrays are 
+	correctly handed over to commie_dataset_struct
+
+Mar 21st (JFS)
+	- fixed bug in ccd_classify. When there are no damaged pixels found we
+	need the Reform command to convert it to something that write_bin
+	- fixed another bug in ccd_classify. When the input array is 0 we 
+	cannot calculate a relative error since this would involve a division 
+	by zero. In that case we just leave the relerror to be 0. We might
+	need to check in subsequent parts, i.e. in _compute_normalization 
+	and _weighted_averages against abs_errors that are 0.
+
+Mar 20th (JFS)
+	- added tag mp_saveread_dir where user can specify the directory to 
+	store the merged positions to. If nothing is specified, then the topdir
+	is used.
+	- added Keyword use_saved_merged_pos to commie.pro. If this Keyword is
+	set, it will invoke a new routine _saveread_merged_pos that will 
+	attempt to read the saved merged positions from disk. If they are not 
+	all present it will print a warning and invoke _merge_by_pos. 
+
+Mar 19th (JFS)
+	- re-did error calculation if _weighted_averages is invoked. Error of
+	mean is directly calculated in that function. This lead to some changes
+	in _merge_by_exp, _merge_dummy_arrays, and _assemble_merged_pos
+	- error arrays are now saved beyond _assemble_merged_pos and will be 
+	stored in final file as adi_error_array in _write_adi
+	- normalization is now calculated by only looking at indices that are 
+	common to all files that are to be normalized. 
+	- Introduced steepness parameter in _intens_scaling. It makes it 
+	possible to crank the scaling to be able to get saturated pixels 
+	within the BS-head.
+
+Mar 18th (JFS)
+	- changed the ev/count constant in _init_relerrs to 23.44 instead of 
+	3.63. To be verified with Stefano, David.
+	- changed _threshold_data to threshold to 10 sigma instead of 5 
+
+Mar 17th (JFS)
+	- added new function _compute_normalization. It is being called by 
+	_flux_normalization to compute the normalization constant
+	- added new message in _messages that asks user to manually enter 
+	wavelength if it is not recorded with the datafiles
+	- added automatic thresh_data_factor estimate by having it be 
+	1/(lowest ring current). This only kicks in if user didn't specify 
+	something in scriptfile.
+	- changed _subtract_no_sample to use Where(this_sample) to identify 
+	indices where to subtract from instead of for-loop through all indices.
+	This should be faster.
+
+Mar 16th (JFS)
+	- as it turns out scaling is no longer necessary if using 
+	_weighted_averages!! 
+	- removed scaling from _remove_saturation,  _threshold_data, 
+	and _assemble_merged_pos
+	- _init_relerrs is now using where() instead of a for-loop which speeds
+	things up
+
+Mar 14th (JFS)
+	- all status output now handled by commie_messages
+
+Mar 13th (JFS)
+	- added new functions _propagate_errors, _weighted_averages
+	- implemented these functions in _merge_by_exp, _subtract_no_sample, 
+	_merge_dummy_arrays, and _assemble_merged_pos
+
+Mar 12th (JFS)
+	- tested weighted sums for _merge_by_exp
+	- tested error propagation through _merge_dummy_arrays
+	- implemented error propagation in subtract_no_sample
+	- implemented and sort of tested _flux_normalization for 
+	_merge_dummy_arrays
+	- implemented weighted averages for _merge_dummy_arrays
+	- implemented error propagation for _merge_dummy_arrays
+	- implemented weighted averages for _assemble_merged_pos
+
+Mar 11th (JFS)
+	- added new routine commie_flux_normalization which calculates the 
+	normalization constant between the first dummy_array (pos_merged_array)
+	and the other dummy_arrays (pos_merged_arrays)
+	- added new pointer arrays relerror_samples and relerror_no_samples to
+	dataset_struct. They will hold the error arrays after each position 
+	has been merged.
+	- added commie_flux_normalization to _merge_by_exp, 
+	_merge_dummy_arrays, and _assemble_merged_pos
+	- tested _flux_normalization for _merge_by_exp
+	- implemented weighted averages for _merge_by_exp
+
+Mar 10th (JFS)
+	- added new routine commie_init_relerrs.pro which calculates the 
+	standard deviations for each pixel of each array in dummy_arrays as 
+	the rms-sum of the background/readout and the photon noise
+	- the result from above is stored in new pointer-array 
+	dummy_relerror_arrays
+	- renamed dk_classify to ccd_classify and moved it to /diffmic/idl/util
+	- changed _normalize_wrt_current to normalize to 1 Amps instead of a 
+	user-defineable number. 
+	- removed max_current_amps from all files
+	
+Mar 6th (JFS)
+	- added compile_opt idl2 to commie.pro, dk_classify, dm_despike, 
+	and display_zoom_click.pro
+	- added compile_opt idl2,hidden to all other routines in folder commie
+	
+Mar 5th (JFS)
+	- added dk_by_pix subtraction to _subtract_dks. If dk_avg_arrays are
+	found to be incomplete, user is asked to confirm to user standard 
+	subtraction where necessary. Tested and works except for some 
+	inconsistencies with the status messages.
+	- added keyword /subtract_dks to commie_messages to issue warning 
+	message described above
+	
+Mar 4th (JFS)
+	- changed the way damaged_pixels is handed over to commie by 
+	dk_classify. Now dk_classify initializes the pointer array and hands 
+	it back to commie rather than commie initializing the array and having 
+	dk_classify fill in the values. Changed in commie.pro, dk_classify.pro,
+	and _initialize_dataset.pro
+	- tested rms noise and average calculations in dk_classify.pro, 
+	now correct.
+	
+Mar 3rd (JFS)
+	- added dk_read to commie_messages
+	- tested and debugged commie_saveread_dk. Routine will now first see if
+	all files and tags necessary are present 
+	- changed commie.pro so that it skips dk_classify if dk-info has
+	already been read-in. It checks for the validity of the dk_rms_arrays 
+	pointer.
+
+Feb 28th (JFS)
+	- added routine commie_messages that will issue all warning messages.
+	- started working on commie_saveread_dk. 
+	- removed tags: masks, mask_positions, mask_header, mask_dir from 
+	scriptfile_io
+	- removed mask_dirs, mask_files, mask_positions from script_struct.
+	- removed mask keyword and corresponding code from initialize_dataset
+	- removed the following files from the archive: _merge_dks_by_exp, 
+	_get_some_stats, _remove_beamstop_classic
+
+Feb 27th (JFS)
+	- added tagname dk_saveread_dir to script_struct. Will be used in new 
+	routine commie_saveread_dk.pro to save the parameters from dk_classify 
+	or to try and read them in from disk. 
+	
+Feb 26th (JFS)
+	- finished transition from size to commie_dataset_struct.nx/ny 
+	- changed comment string in _write_adi to display the version number as
+	**.**
+	- added keyword median_percent to dk_classify that now calls 
+	dm_despike.pro to remove outliers	
+	- modified dk_classify to hand back structures slow_params, 
+	fast_params, slow_by_pix, fast_by_pix, containing all the important 
+	parameters.
+	- modified dk_classify to always calculate rms-noise for both slow and 
+	fast and to return both rms_arrays_by_exp, and exp_seconds in 
+	slow_by_pix or fast_by_pix respectively.
+	- modified dk_classify to also calculate and hand back dk_arrays_by_exp 
+	if the dk_by_pix keyword has been set.
+	- modified commie to assign these new parameters to: dk_exp_seconds, 
+	dk_rms_arrays, dk_avg_arrays in	dataset_struct, where each structure 
+	member consists of two pointers of which the first one points to the 
+	fast and the second one to the slow arrays. Dk_rms_arrays and 
+	dk_avg_arrays are actually pointer-arrays.
+
+Feb 25th (JFS)
+	- fixed issue with beamstop finder due to rotation, should be working 
+	now. 
+	- Resolved issue of not defined slope for find_bs.pro if two x values 
+	returned from display_zoom_click are the same.
+	
+Feb 22nd (JFS)
+	- added keyword dk_by_pix to commie.pro, dk_classify.pro, and 
+	_subtract_dks.pro
+	- started to implement dk_per_pix
+	- changed tolerance to tolerance_meters
+	- changed default ouput filename to always contain the sign of the angle
+	- added tolerance of +-1/4 degree before user is prompted that not 
+	all files have the same angle.
+	- added rotate keyword to dataset_struct. Default is 3 which 
+	corresponds to 90º cw rotation 
+	- implemented rotate in dk_classify, display_zoom_click.pro
+	- added new procedure commie_read_dt.pro, that rotates arrays and 
+	converts them to Double, so that user does not have to worry about that.
+	- implemented commie_read_dt in _initialize_dataset, _find_bs,  
+	_merge_by_pos.
+	- changed _find_bs_widget to calculate entire bs_array in _region_grow.
+	It is rotated 90º ccw to fill-in the wrongly assigned pixels, 
+	then it is rotated back again.
+	- started replacing size with nx, ny
+
+
+Feb 20th (JFS)
+	- threshold scaling seems to work fairly well now. The scaling 
+	function is an exponential
+	- changed _subtract_dks such that it uses where to identify all 
+	pixels > 0 to subtract the dk instead of 2 For loops. The new way 
+	seems faster.
+
+Feb 19th (JFS)
+	- implemented scaling in _remove_saturation.pro
+	- added default sat_threshold_high for 2k chip to be 45000. It is 
+	defined in _initialize_dataset.pro
+	- added structure tags nx, ny, n to commie_dataset_struct. They 
+	determine the array dimensions and total number of elements. It is 
+	determined in _initialize_dataset.pro
+
+Feb 18th (JFS)
+	- added check if angles are the same in _initialize_dataset.pro. 
+	Prompts for confirmation if not
+	- changed filename generator such that angle will be transferred 
+	to format F(06.2).
+	- continue to working on _region_grow.pro  and _intens_scaling.pro
+
+Feb 16th (JFS)
+	- changed saveread_bs.pro so that it will save 0,255 instead of 0,1 
+	and convert it back to 0,1 when	the bs is read in.
+	- wrote own routine commie_region_grow that allows for changing 
+	threshold towards depending on the distance to the center of the 
+	diffraction pattern.
+
+Feb 11th (JFS)
+	- started to implement automatic alignment using stack_align.pro. 
+	This routine has been modified to fit into the commie distribution 
+	and renamed to commie_align_bs.pro. It is being tested right now.
+
+Feb 5th (JFS)
+	- realized that _find_bs.pro, was only using the position high data 
+	since it set all bs_ys positions to 0 which cuts out all FOR-loops
+	from line 185 on. So effectively we only looked at data from pos 0 
+	added up
+	- fixed the above bug and added the possibility that two different
+	bs_xs can have the same bs_ys
+
+
+Feb 4th (JFS)
+	- new CCD images have pixels with 0 count rates, need to take into 
+	account when plotting log of these images, done so for check of 
+	bad_data in _initialize_dataset.pro
+
+
+
+Latest Ideas (add new on top)
+--------------------------------------------------------------------------------
+
+(JFS)	for documentation go through all routines and explain step by step what
+	is happening to sample, no_sample and such,  Routine by routine
